@@ -1,0 +1,50 @@
+{
+	"popular": {
+		"url": "https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI",
+		"length": 200
+	},
+	"latin": {
+		"url": "https://www.youtube.com/playlist?list=PLcfQmtiAG0X-fmM85dPlql5wfYbmFumzQ",
+		"length": 498
+	},
+	"pop": {
+		"url": "https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj",
+		"length": 200
+	},
+	"reggae": {
+		"url": "https://www.youtube.com/playlist?list=PLYAYp5OI4lRLf_oZapf5T5RUZeUcF9eRO",
+		"length": 500
+	},
+	"rnb": {
+		"url": "https://www.youtube.com/playlist?list=PLFRSDckdQc1th9sUu8hpV1pIbjjBgRmDw",
+		"length": 500
+	},
+	"k_pop": {
+		"url": "https://www.youtube.com/playlist?list=PL4QNnZJr8sRNKjKzArmzTBAlNYBDN2h-J",
+		"length": 149
+	},
+	"soul": {
+		"url": "https://www.youtube.com/playlist?list=PLQog_FHUHAFUDDQPOTeAWSHwzFV1Zz5PZ",
+		"length": 500
+	},
+	"heavymetal": {
+		"url": "https://www.youtube.com/playlist?list=PLfY-m4YMsF-OM1zG80pMguej_Ufm8t0VC",
+		"length": 500
+	},
+	"hardrock": {
+		"url": "https://www.youtube.com/playlist?list=PL9NMEBQcQqlzwlwLWRz5DMowimCk88FJk",
+		"length": 500
+	},
+	"classical": {
+		"url": "https://www.youtube.com/playlist?list=PLVXq77mXV53-Np39jM456si2PeTrEm9Mj",
+		"length": 500
+	},
+    "samba": {
+		"url": "https://www.youtube.com/playlist?list=PLAE5AE8A9EBF641FB",
+		"length": 81  
+	},
+    "funk_brazil": {
+		"url": "https://www.youtube.com/playlist?list=PLA6B239361CC92D14",
+		"length": 100
+	}
+}
