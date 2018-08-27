@@ -9,77 +9,82 @@ import argparse
 
 import matplotlib.pyplot as plt
 import librosa
-import librosa.display
 
 import numpy as np
 import os
+import glob
 
 
 parser = argparse.ArgumentParser('')
 
-parser.add_argument('--run-mode', type=str, default='file',
+parser.add_argument('--run-mode', type=str, default='path',
                     choices=['file', 'path'])
 
-parser.add_argument('--output-path', type=str, default='preprocessed_files/')
-parser.add_argument('--input-path', type=str, default='audio_files/classical_145.wav')
-parser.add_argument('--window-size', type=int, default=11025)
+parser.add_argument('--output-path', type=str, default='audio_files/preprocessed.npy')
+parser.add_argument('--input-path', type=str, default='audio_files/splitted/')
+parser.add_argument('--n_fft', type=int, default=2048)
 
 
-def download_from_playlist_file(playlist_file, songs_per_playlist, output_path):
-    playlists_urls = utils.load_json(playlist_file)
-    for playlist in playlists_urls:
-        playlist_id = utils.id_from_youtube_url(playlists_urls[playlist]['url'])
-        length = playlists_urls[playlist]['length']
-        indices = np.random.choice(range(length), size=min(length, songs_per_playlist), replace=False)
-
-        for index in indices:
-            print("Downloading song %s from playlist %s" % (index, playlist))
-            final_filename = os.path.join(output_path,  '%s_%s' % (playlist, index))
-            output_filename = '"' + final_filename + '.%(ext)s"'
-            utils.mkdir_if_needed(os.path.dirname(final_filename))
-
-            if os.path.exists(final_filename + '.wav'):
-                continue
-
-            try:
-                command = ('youtube-dl \
-                    --extract-audio \
-                    --ignore-errors \
-                    --audio-quality 0 \
-                    -x \
-                    -o ' + output_filename + ' --audio-format wav \
-                    --playlist-start ' + str(index) + ' --playlist-end ' + str(index) + ' ' \
-                    + playlist_id)
-                utils.get_status_output(command)
-            except:
-                print("Error during download :(")
-
-def wav_to_spectrogram(input_path, output_path, window_size):
+def wav_to_spectrogram(input_path, n_fft, save_file=False, output_path=None):
+    '''Code from: https://github.com/DmitryUlyanov/neural-style-audio-tf/blob/master/neural-style-audio-tf.ipynb'''
+    # Load wav file
     y, sr = librosa.load(input_path)
-    number_of_windows = int(len(y)/window_size)
-    spectrogram = np.empty((number_of_windows, window_size))
+    
+    # Generate spectrogram
+    spectrogram = librosa.stft(y, n_fft)
+    p = np.angle(spectrogram)
+    spectrogram = np.log1p(np.abs(spectrogram[:, :430]))
 
-    for i in range(number_of_windows):
-        spectrogram[i, :] = abs(np.fft.fft(y[i * window_size: (i+1) * window_size]))
+    # Save spectrogram
+    if save_file:
+        if not os.path.exists(os.path.dirname(output_path)): 
+            os.makedirs(output_path)
+        np.save(output_path, spectrogram)
     
-    melgram = librosa.power_to_db(librosa.feature.melspectrogram(y, sr=sr, n_mels=128))
-    # melgram = melgram / np.linalg.norm(melgram)
+    return spectrogram, sr
+
+
+def spectrogram_to_wav(spectrogram, output_path, sr, n_fft):
+    '''Code from: https://github.com/DmitryUlyanov/neural-style-audio-tf/blob/master/neural-style-audio-tf.ipynb'''
+    # Spectrogram to Wav
+    a = np.zeros_like(spectrogram)
+    a[:spectrogram.shape[0],:] = np.exp(spectrogram) - 1
+
+    p = 2 * np.pi * np.random.random_sample(a.shape) - np.pi
+    for i in range(500):
+        S = a * np.exp(1j*p)
+        x = librosa.istft(S)
+        p = np.angle(librosa.stft(x, n_fft))
     
-    plt.figure(figsize=(10, 4))
-    librosa.display.specshow(melgram,
-                             y_axis='mel', fmax=8000,
-                             x_axis='time')
-    plt.colorbar(format='%+2.0f dB')
-    plt.title('Mel spectrogram')
-    plt.tight_layout()
-    plt.show(), plt.pause(10)
-    return melgram
+    # Save wav
+    if not os.path.exists(os.path.dirname(output_path)): 
+        os.makedirs(output_path)
+    librosa.output.write_wav(output_path, x, sr)
+    return x
+
+
+def every_wav_to_spectrogram(input_path, output_path, n_fft):
+    if not os.path.exists(os.path.dirname(output_path)): 
+        os.makedirs(output_path)
+
+    spectrograms = []
+    for i, f in enumerate(glob.glob(os.path.join(input_path,'*'))):
+        if i % 100 == 0 and i > 0:
+            break
+            print('Preprocessing %d ...' % i)
+        spectrogram, sr = wav_to_spectrogram(f, n_fft)
+        if spectrogram.shape != (1025, 430):
+            continue
+        spectrograms.append(spectrogram)
+
+    np.save(output_path, spectrograms)
+    return spectrograms
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.run_mode == 'file':
-        wav_to_spectrogram(args.input_path, args.output_path, args.window_size)
+        wav_to_spectrogram(args.input_path, args.n_fft, save_file=True, output_path=args.output_path)
     elif args.run_mode == 'path':
-        download_from_playlist_list()
+        every_wav_to_spectrogram(args.input_path, args.output_path, args.n_fft)
