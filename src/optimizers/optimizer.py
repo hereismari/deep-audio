@@ -4,13 +4,13 @@ import tensorflow as tf
 class Optimizer(object):
 
     _OPTIMIZERS = {
-        'Adam': tf.train.AdamOptimizer()
+        'Adam': tf.train.AdamOptimizer
     }
 
-    def __init__(self, optimizer_name, loss_function_name):
+    def __init__(self, optimizer_name, loss_function_name, learning_rate=0.001, **kwargs):
         if optimizer_name in self._OPTIMIZERS:
             self.optimizer_name = optimizer_name
-            self.optimizer = self._OPTIMIZERS[optimizer_name]
+            self.optimizer = self._OPTIMIZERS[optimizer_name](learning_rate=learning_rate, **kwargs)
         else:
             raise Exception('Optimizer unknown %s' % optimizer_name)
 

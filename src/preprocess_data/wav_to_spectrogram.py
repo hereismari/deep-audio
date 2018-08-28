@@ -9,6 +9,7 @@ import argparse
 
 import matplotlib.pyplot as plt
 import librosa
+import scipy
 
 import numpy as np
 import os
@@ -29,11 +30,13 @@ def wav_to_spectrogram(input_path, n_fft, save_file=False, output_path=None):
     '''Code from: https://github.com/DmitryUlyanov/neural-style-audio-tf/blob/master/neural-style-audio-tf.ipynb'''
     # Load wav file
     y, sr = librosa.load(input_path)
+    print(input_path)
     
     # Generate spectrogram
-    spectrogram = librosa.stft(y, n_fft)
-    p = np.angle(spectrogram)
-    spectrogram = np.log1p(np.abs(spectrogram[:, :430]))
+    spectrogram = librosa.stft(y, n_fft, window=scipy.signal.hamming)
+    
+    mel_spectrogram, mel_basis, S = melspectrogram(y, n_mels=64)
+    spectrogram = np.log1p(np.abs(spectrogram[:, :257]))
 
     # Save spectrogram
     if save_file:
@@ -41,10 +44,10 @@ def wav_to_spectrogram(input_path, n_fft, save_file=False, output_path=None):
             os.makedirs(output_path)
         np.save(output_path, spectrogram)
     
-    return spectrogram, sr
+    return mel_spectrogram, sr
 
 
-def spectrogram_to_wav(spectrogram, output_path, sr, n_fft):
+def spectrogram_to_wav(spectrogram, output_path, sr=22050, n_fft=2048):
     '''Code from: https://github.com/DmitryUlyanov/neural-style-audio-tf/blob/master/neural-style-audio-tf.ipynb'''
     # Spectrogram to Wav
     a = np.zeros_like(spectrogram)
@@ -73,12 +76,25 @@ def every_wav_to_spectrogram(input_path, output_path, n_fft):
             break
             print('Preprocessing %d ...' % i)
         spectrogram, sr = wav_to_spectrogram(f, n_fft)
-        if spectrogram.shape != (1025, 430):
+        if spectrogram.shape != (64, 216):
             continue
         spectrograms.append(spectrogram)
 
     np.save(output_path, spectrograms)
     return spectrograms
+
+
+def visualize_spectrogram(spectrogram):
+    plt.imshow(spectrogram), plt.pause(2)
+
+
+def melspectrogram(y=None, sr=22050, S=None, n_fft=2048, hop_length=512,
+                   power=2.0, **kwargs):
+    S, n_fft = librosa.core.spectrum._spectrogram(y=y, S=S, n_fft=n_fft, hop_length=hop_length,
+                            power=power)
+    # Build a Mel filter
+    mel_basis = librosa.filters.mel(sr, n_fft, **kwargs)
+    return np.dot(mel_basis, S), mel_basis, S
 
 
 if __name__ == "__main__":
