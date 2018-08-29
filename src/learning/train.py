@@ -8,8 +8,8 @@ import utilities.utils as utils
 
 
 def train():
-    ds = DataSource('audio_files/preprocessed.npz.npy')
-    model = mf.build_model('DAE_CNN', input_shape=ds._data[0].shape)
+    ds = DataSource('audio_files/ae_dataset/train_data.npy', 'audio_files/ae_dataset/train_labels.npy')
+    model = mf.build_model('CNN', input_shape=ds._data[0].shape)
     optimizer = Optimizer('Adam', 'RMSE')
 
     EPOCHS = 100
