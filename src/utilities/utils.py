@@ -1,4 +1,4 @@
-from download_data.utilities.utils import *
+from data.download.utilities.utils import *
 import numpy as np
 import librosa
 import os
