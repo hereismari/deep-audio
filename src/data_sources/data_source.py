@@ -25,7 +25,6 @@ class DataSource(object):
         self.num_classes = len(self._classes)
     
         self._data_dataset = tf.data.Dataset.from_tensor_slices(self._data)
-        import ipdb; ipdb.set_trace()
         self._data_dataset = self._data_dataset.map(lambda x: tf.reshape(x, (x.shape[0], x.shape[1], 1)))
         self._data_dataset = self._data_dataset.map(lambda x: tf.cast(x, tf.float32))
 

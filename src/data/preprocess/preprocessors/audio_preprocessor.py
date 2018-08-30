@@ -130,7 +130,7 @@ class AudioPreprocessor(object):
 
         # Split file
         if sample_type == 'all':
-            wavs = [wav[step: step + miliseconds] for step in range(0, len(wav)-miliseconds, miliseconds)]
+            wavs = [wav[step: step + miliseconds] for step in range(0, len(wav)-miliseconds, 1000)]
         elif sample_type == 'random':
             indx = np.random.random_integers(0, len(wav)-miliseconds)
             wavs = [wav[indx: indx + miliseconds]]

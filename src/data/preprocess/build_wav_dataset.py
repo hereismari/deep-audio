@@ -30,13 +30,13 @@ parser.add_argument('--format', type=str, default='melspectrogram',
                     choices=['spectrogram', 'melspectrogram'])
 parser.add_argument('--n_fft', type=int, default=2048)
 parser.add_argument('--sample-size', type=int, default=5)
-parser.add_argument('--sample-type', type=str, default='random', choices=['all', 'random'])
+parser.add_argument('--sample-type', type=str, default='all', choices=['all', 'random'])
 # Others
 parser.add_argument('--seed', type=int, default=7)
 parser.add_argument('--test-size', type=int, default=0.25)
 
 
-def build_data_partition(path, dp, classes, curr_index, n_fft, format, sample_size):
+def build_data_partition(path, dp, classes, curr_index, n_fft, format, sample_size, sample_type):
     glob_path = os.path.join(path, '**', '*.wav')
     
     spectrograms = []
@@ -53,7 +53,8 @@ def build_data_partition(path, dp, classes, curr_index, n_fft, format, sample_si
         if i % 30 == 0 and i > 0:
             print('Preprocessing %d/%d ...' % (i, len(glob_files)))
         
-        f_splitted = AudioPreprocessor.split_wav_file(f, seconds=sample_size)
+        f_splitted = AudioPreprocessor.split_wav_file(f, seconds=sample_size, sample_type=sample_type)
+        print(f_splitted, class_name)
         for new_file in f_splitted:
             spectrogram = AudioPreprocessor.wav_file_to(new_file, n_fft, to=format)
             print(spectrogram.shape)
@@ -67,7 +68,7 @@ def build_data_partition(path, dp, classes, curr_index, n_fft, format, sample_si
     return spectrograms, labels, classes, curr_index
 
 
-def build_wav_dataset(data_partitions_path, output_path, n_fft, format, test_size, sample_size):
+def build_wav_dataset(data_partitions_path, output_path, n_fft, format, test_size, sample_size, sample_type):
     classes = {}
     curr_index = 0
 
@@ -82,7 +83,7 @@ def build_wav_dataset(data_partitions_path, output_path, n_fft, format, test_siz
         else:
             spectrograms, labels, classes, curr_index = build_data_partition(data_partitions_path[dp], dp,
                                                                              classes, curr_index, n_fft, format,
-                                                                             sample_size)
+                                                                             sample_size, sample_type)
             data_partitions[dp] = (np.array(spectrograms), np.array(labels))
     
     for dp in data_partitions:
@@ -103,4 +104,5 @@ if __name__ == "__main__":
         'test': args.test_path
     })
     build_wav_dataset(data_partitions_path, args.output_path,
-                      args.n_fft, args.format, args.test_size, args.sample_size)
+                      args.n_fft, args.format, args.test_size, args.sample_size,
+                      args.sample_type)

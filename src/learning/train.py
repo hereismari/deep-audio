@@ -29,7 +29,7 @@ def train():
             train_losses.append(train_loss)
             train_accuracy += sum(np.argmax(predicted, axis=1) == label.numpy())
             train_instances += label.numpy().shape[0]
-            print ('Epoch {} Batch {} Train Loss {:.6f}'.format(epoch + 1, batch + 1, sum(train_losses)/len(train_losses)))
+            # print ('Epoch {} Batch {} Train Loss {:.6f}'.format(epoch + 1, batch + 1, sum(train_losses)/len(train_losses)))
 
 
         eval_losses = []
