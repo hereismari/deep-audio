@@ -119,18 +119,19 @@ class AudioPreprocessor(object):
     @staticmethod
     def split_wav_file(file_path, seconds=5, sample_type='random'):
         # Seconds to miliseconds
-        miliseconds = seconds * 1000
+        miliseconds = int(seconds * 1000)
         # Read file
         wav = pydub.AudioSegment.from_wav(file_path)
         # Remove silence at the beginning and end of wav
-        wav = AudioPreprocessor.remove_silence(wav)
+        # wav = AudioPreprocessor.remove_silence(wav)
         # If wav file is too small ignore file
+        
         if len(wav) < miliseconds:
             return []
 
         # Split file
         if sample_type == 'all':
-            wavs = [wav[step: step + miliseconds] for step in range(0, len(wav)-miliseconds, 1000)]
+            wavs = [wav[step: step + miliseconds] for step in range(0, len(wav)-miliseconds, 2000)]
         elif sample_type == 'random':
             indx = np.random.random_integers(0, len(wav)-miliseconds)
             wavs = [wav[indx: indx + miliseconds]]
@@ -149,7 +150,7 @@ class AudioPreprocessor(object):
             return []
 
     @staticmethod
-    def visualize_spectrogram(spectrogram, sr):
+    def visualize_spectrogram(spectrogram, sr=22050):
         librosa.display.specshow(spectrogram, sr=sr, x_axis='time', y_axis='mel')
 
         # Put a descriptive title on the plot

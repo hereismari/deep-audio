@@ -1,6 +1,8 @@
 import tensorflow as tf
 tf.enable_eager_execution()
 
+import tensorflowjs as tfjs
+
 import numpy as np
 
 from data_sources.data_source import DataSource
@@ -8,18 +10,18 @@ from optimizers.optimizer import Optimizer
 import models.model_factory as mf
 import utilities.utils as utils
 
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
 
 def train():
-    ds_train = DataSource('audio_files/ae_dataset/train_data.npy', 'audio_files/ae_dataset/train_labels.npy', classes_dict='audio_files/ae_dataset/classes')
-    ds_eval  = DataSource('audio_files/ae_dataset/eval_data.npy', 'audio_files/ae_dataset/eval_labels.npy', classes_dict='audio_files/ae_dataset/classes')
-    ds_test  = DataSource('audio_files/ae_dataset/test_data.npy', 'audio_files/ae_dataset/test_labels.npy', classes_dict='audio_files/ae_dataset/classes')
-   
-    import ipdb; ipdb.set_trace()
+    ds_train = DataSource('audio_files/speech/train_data.npy', 'audio_files/speech/train_labels.npy', classes_dict='audio_files/speech/classes')
+    ds_eval  = DataSource('audio_files/speech/eval_data.npy', 'audio_files/speech/eval_labels.npy', classes_dict='audio_files/speech/classes')
+    ds_test  = DataSource('audio_files/speech/test_data.npy', 'audio_files/speech/test_labels.npy', classes_dict='audio_files/speech/classes')
 
-    model = mf.build_model('CNN', input_shape=ds_train._data[0].shape, num_classes = ds_train.num_classes)
-    optimizer = Optimizer('Adam', 'RMSE')
+    model = mf.build_model('CNN', input_shape=ds_train.input_shape, num_classes = ds_train.num_classes)
+    optimizer = Optimizer('Adam')
 
-    EPOCHS = 10
+    EPOCHS = 1
     for epoch in range(EPOCHS):
         train_losses = []
         train_accuracy = 0
@@ -56,6 +58,14 @@ def train():
     
     print ('Epoch {} Train Accuracy: {:.6f} | Test Accuracy: {:.6f}'.format(epoch +1, train_accuracy/train_instances, accuracy/instances))
     print ('Epoch {} Train Loss {:.6f} | Eval Loss {:.6f}'.format(epoch + 1, sum(train_losses)/len(train_losses), sum(eval_losses)/len(eval_losses)))
+
+
+    import ipdb; ipdb.set_trace()
+
+    saver = tf.train.Checkpoint(model=model, optimizer=optimizer.optimizer)
+    saver.save('/home/marianne/deep-audio/saver/save')
+
+    tfjs.converters.convert_tf_saved_model('/home/marianne/deep-audio/saver/save.ckpt', output_node_names=['test'], output_dir='/home/marianne/deep-audio/')
 
 
 if __name__ == '__main__':

@@ -23,13 +23,13 @@ parser = argparse.ArgumentParser('Preprocess waf files and partition dataset if 
 # Paths
 parser.add_argument('--train-path', type=str, required=True)
 parser.add_argument('--eval-path', type=str, default=None)
-parser.add_argument('--test-path', type=str, required=True)
-parser.add_argument('--output-path', type=str, default='audio_files/ae_dataset/')
+parser.add_argument('--test-path', type=str, default=None)
+parser.add_argument('--output-path', type=str, default='audio_files/transfer/')
 # Audio parameters
 parser.add_argument('--format', type=str, default='melspectrogram',
                     choices=['spectrogram', 'melspectrogram'])
 parser.add_argument('--n_fft', type=int, default=2048)
-parser.add_argument('--sample-size', type=int, default=5)
+parser.add_argument('--sample-size', type=int, default=0.8)
 parser.add_argument('--sample-type', type=str, default='all', choices=['all', 'random'])
 # Others
 parser.add_argument('--seed', type=int, default=7)
@@ -50,18 +50,12 @@ def build_data_partition(path, dp, classes, curr_index, n_fft, format, sample_si
             classes[class_name] = curr_index
             curr_index += 1
         
-        if i % 30 == 0 and i > 0:
-            print('Preprocessing %d/%d ...' % (i, len(glob_files)))
+        if i % 100 == 0:
+            print('Preprocessing %d/%d, %.2f%% ...' % (i, len(glob_files), i/len(glob_files) * 100))
         
         f_splitted = AudioPreprocessor.split_wav_file(f, seconds=sample_size, sample_type=sample_type)
-        print(f_splitted, class_name)
         for new_file in f_splitted:
             spectrogram = AudioPreprocessor.wav_file_to(new_file, n_fft, to=format)
-            print(spectrogram.shape)
-            if (spectrogram.shape != (64, 216)):
-                print(f, new_file)
-                import ipdb; ipdb.set_trace()
-            os.remove(new_file)
             spectrograms.append(spectrogram)
             labels.append(classes[class_name])
 
@@ -75,11 +69,11 @@ def build_wav_dataset(data_partitions_path, output_path, n_fft, format, test_siz
     data_partitions = {}    
     for dp in data_partitions_path:
         if data_partitions_path[dp] is None:
-            data_x, data_y, labels_x, labels_y = PartitionPreprocessor.dataset_partition(data_partitions['train'][0],
+            train_data, test_data, train_labels, test_labels = PartitionPreprocessor.dataset_partition(data_partitions['train'][0],
                                                                                          data_partitions['train'][1],
                                                                                          test_size=test_size)
-            data_partitions['train'] = (data_x, labels_x)
-            data_partitions['eval'] = (data_y, labels_y)  
+            data_partitions['train'] = (train_data, train_labels)
+            data_partitions[dp] = (test_data, test_labels)
         else:
             spectrograms, labels, classes, curr_index = build_data_partition(data_partitions_path[dp], dp,
                                                                              classes, curr_index, n_fft, format,
@@ -100,8 +94,8 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     data_partitions_path = OrderedDict({
         'train': args.train_path,
-        'eval': args.eval_path, 
-        'test': args.test_path
+        'test': args.eval_path, 
+        'eval': args.test_path
     })
     build_wav_dataset(data_partitions_path, args.output_path,
                       args.n_fft, args.format, args.test_size, args.sample_size,
