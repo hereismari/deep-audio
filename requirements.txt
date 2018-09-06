@@ -1,3 +1,9 @@
 librosa==0.6.2
 regex==2.4.145
-tensorflow==1.10.0
+tensorflow==1.10.1
+tensorflowjs==0.5.7
+tensorflow-hub==0.1.1
+numpy==1.14.5
+scipy==1.1.0
+scikit-learn==0.19.2
+pydub==0.22.1
